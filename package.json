@@ -1,0 +1,29 @@
+{
+  "name": "cnki-batch",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic CNKI (中国知网) batch literature retrieval producing bibliographic records plus abstracts, for guideline / expert-consensus development.",
+  "keywords": [
+    "cnki",
+    "知网",
+    "literature-search",
+    "expert-consensus",
+    "guideline",
+    "cdp",
+    "puppeteer"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "probe": "node src/probe.js",
+    "probe:export": "node src/probe-export.js",
+    "batch": "node src/cnki-batch.js",
+    "check": "node --check src/cdp.js && node --check src/cnki-batch.js && node --check src/probe.js && node --check src/probe-export.js"
+  },
+  "dependencies": {
+    "puppeteer-core": "^25.12.0"
+  }
+}
