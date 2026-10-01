@@ -1,0 +1,16 @@
+# Normalize line endings across platforms (Windows contributors included).
+# Keep LF in the repository and in the working tree for shell/JS consistency.
+* text=auto eol=lf
+
+# Binary assets must never be line-ending converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.xlsx binary
+*.docx binary
+
+# Keep lockfile diffs meaningful.
+package-lock.json text eol=lf
