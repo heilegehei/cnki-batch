@@ -153,27 +153,42 @@ npm run probe:export -- "中医药 肺癌"
 
 ---
 
-## 多库访问现状（实测）
+## 支持的数据库
 
-不同数据库的可获取性差异极大，实测结论如下（`npm run probe:foreign` 可复现）：
+统一入口 `src/retrieve.js`，一次检索可跨多个库，自动去重合并。
 
-| 数据库 | 状态 | 判读 |
+| 源 | 键名 | 方式 | 摘要 | 是否需要注册 |
+|---|---|---|---|---|
+| **PubMed** | `pubmed` | NCBI E-utilities（两步调用） | ✅ | 否（可选 API key 提速） |
+| **Europe PMC** | `europepmc` | 免费 REST API，字段化布尔检索 | ✅ 98% | 否 |
+| **ClinicalTrials.gov** | `clinicaltrials` | 官方 v2 API | ✅ | 否 |
+| **CNKI 知网** | `cnki` | 浏览器（CDP），需机构 IP | ✅ | 机构 IP |
+| **维普 VIP** | `vip` | 浏览器（CDP） | ✅ 详情页补全 | 否 |
+
+### 实测结论（`npm run probe:foreign`、`npm run probe:cn` 可复现）
+
+| 数据库 | 状态 | 说明 |
 |---|---|---|
-| **PubMed** | 200 | 官方 E-utilities，免费开放 |
-| **Europe PMC** | 200 | 免费 REST API，含全文与预印本 |
-| **Crossref** | 200 | 免费，DOI 权威源 |
-| **CNKI 知网** | 200（需机构会话） | 服务端渲染，本项目已支持批量 |
-| **Cochrane Library** | **403 `Just a moment...`** | Cloudflare 反爬 |
-| **Embase** | **403 `Just a moment...`** | Cloudflare 反爬 |
-| **Web of Science** | 200 但仅空壳 SPA | 内容须机构会话；API 返回 401 需 key |
+| PubMed / Europe PMC / ClinicalTrials.gov | **200 可用** | 官方 API，零配置 |
+| 维普 VIP | **可用** | 检索页 412 反爬，但浏览器驱动成功 |
+| CNKI 知网 | **可用** | 需机构 IP，含验证码处理 |
+| 万方 Wanfang | **403 验证墙** | 阿里云盾，150 秒内不自放行，**无法无人值守** |
+| SinoMed | 302 跳登录 | 需注册账号 |
+| Cochrane / Embase / Web of Science / Scopus / CINAHL | **Cloudflare 403** | 需机构订阅或官方 API |
 
-### 为什么不为这三个库写爬虫
+**万方的替代做法**：在浏览器里手动检索并导出 RIS，再交给合并层：
 
-不是技术上"做不到"，而是三条路同时封死：
+```bash
+node src/merge.js --in wanfang-export.ris --source 万方 --out merged
+```
 
-1. **技术**：Cloudflare 挑战 + SPA 架构，直连拿不到内容。
-2. **合规**：Clarivate / Elsevier 条款明确禁止未经许可的自动抓取；数据挖掘须走机构协议或官方 API。
-3. **方法学**：指南与共识必须报告**可复现**的检索过程。爬虫结果不稳定、无法引用，审稿时无法交代检索日期与命中数。
+### 为什么不为 Cochrane / Embase / WoS 写爬虫
+
+三条路同时封死：
+
+1. **技术**：Cloudflare 挑战 + SPA 架构，直连拿不到内容（实测 `/verify/home?captchaType=blockPuzzle`）。
+2. **合规**：Clarivate / Elsevier 条款禁止未经许可的自动抓取；数据挖掘须走机构协议或官方 API。
+3. **方法学**：指南必须报告**可复现**的检索过程。爬虫结果不稳定、无法引用，审稿时无法交代检索日期与命中数。
 
 **正解是官方 API**（需机构权限）：
 
@@ -181,9 +196,93 @@ npm run probe:export -- "中医药 肺癌"
 - Embase：Elsevier Embase API（[使用资格](https://www.elsevier.support/dataasaservice/answer/who-can-use-the-elsevier-research-products-apis)）
 - Cochrane：机构访问 + 平台导出 RIS
 
-本项目提供的是它们的**理论覆盖替代与结果合并**：Europe PMC + Crossref 可覆盖相当部分 PubMed/Embase 重叠区，而**合并去重层对任何来源都适用**（包括你手动导出的 RIS）。
+> 诚实说明：Embase 相对 PubMed 的独特价值（会议摘要与欧洲期刊）**没有免费替代**。
 
-> 诚实说明：Embase 相对 PubMed 的独特价值（约 15–30% 会议摘要与欧洲期刊）**没有免费替代**。若指南要求必须检索 Embase，需要机构订阅。
+---
+
+## 检索用法
+
+```bash
+# 零配置三源，自动去重
+node src/retrieve.js --query "acupuncture AND lung cancer" --sources pubmed,europepmc,clinicaltrials
+
+# 全部源（含浏览器驱动的知网与维普）
+node src/retrieve.js --query "肺癌 中医药" --sources all --limit 50
+
+# 只跑维普
+node src/retrieve.js --query "肺癌 中医药" --sources vip --limit 20
+
+# 检索策略文件（每行一条，或 "名称<TAB>检索式"）
+node src/retrieve.js --query-file strategy.txt --sources pubmed,europepmc --out results
+
+# 列出所有源及其要求
+node src/retrieve.js --list
+```
+
+| 参数 | 说明 | 默认 |
+|---|---|---|
+| `--query` | 检索词或检索式 | 必填* |
+| `--query-file` | 检索策略文件（多检索式） | — |
+| `--sources` | 逗号分隔，或 `all` | `pubmed,europepmc,clinicaltrials` |
+| `--out` | 输出目录 | `results` |
+| `--limit` | 每源上限 | 200 |
+| `--max-pages` | 浏览器源的最大翻页数 | 按 limit 推算 |
+| `--no-merge` | 跳过去重，只输出原始记录 | 去重开启 |
+| `--no-enrich` | 维普跳过详情页补摘要（快很多，但无摘要） | 补全开启 |
+| `--reuse` | 复用已开的 Chrome | 否 |
+| `--advanced` | 知网走专业检索 | 否 |
+| `--json` | JSON 输出 | 否 |
+
+\* `--query` 与 `--query-file` 至少给一个。
+
+### 输出
+
+```
+results/
+  retrieved_<时间>.json    合并后记录 + 每源命中数 + 去重报告 + 错误
+  retrieved_<时间>.csv     带 BOM，可直接用于 Excel / Rayyan / Covidence 筛选
+  dedup-report_<时间>.json 每次合并的保留/丢弃题名与来源
+```
+
+### 各源检索语法
+
+| 源 | 语法示例 |
+|---|---|
+| PubMed | `(lung neoplasms[MeSH]) AND (acupuncture[tiab] OR moxibustion[tiab])` |
+| Europe PMC | `(TITLE_ABS:"lung cancer") AND (TITLE_ABS:"acupuncture")` |
+| ClinicalTrials.gov | 自由词，如 `acupuncture AND lung cancer` |
+| CNKI | `中医药 肺癌 围手术期`，或 `--advanced` 用专业检索式 |
+| 维普 | `肺癌 中医药`，或字段式 `K=肺癌` |
+
+---
+
+## 配置凭据（重要）
+
+**所有 API key 都从环境变量读取，代码里没有任何硬编码密钥，也不需要写入文件。**
+
+```bash
+cp .env.example .env      # 然后编辑 .env
+set -a; source .env; set +a        # macOS / Linux
+```
+
+Windows PowerShell：
+
+```powershell
+$env:NCBI_API_KEY = "你的key"
+# 或从文件加载
+Get-Content .env | ForEach-Object {
+  if ($_ -match '^\s*([^#=]+)=(.*)$') { Set-Item -Path "env:$($matches[1].Trim())" -Value $matches[2].Trim() }
+}
+```
+
+| 变量 | 必需 | 作用 |
+|---|---|---|
+| `NCBI_API_KEY` | 否 | PubMed 速率 3→10 次/秒（[免费申请](https://www.ncbi.nlm.nih.gov/account/)） |
+| `CONTACT_EMAIL` | 建议 | 让 Crossref/OpenAlex/NCBI 把你放进快速池，避免 429 |
+| `CHROME_PATH` | 否 | 指定浏览器可执行文件 |
+| `CDP_PORT` | 否 | 调试端口，默认 9222 |
+
+`.env` 已在 `.gitignore` 中，且**推送前有强制密钥扫描**（见下）。
 
 ---
 
@@ -274,12 +373,16 @@ node src/merge.js --in out/cnki_2026-10-01_11-56-22.json pubmed.txt cochrane.ris
 
 ## 风险与合规
 
-- **验证码**：触发时脚本报 `CAPTCHA_BLOCKED` 并停止，不会硬绕。请在 Chrome 窗口手动拖动滑块，再用 `--reuse` 继续。
-- **403 / 429**：导出接口返回 403 时立即停止重试，避免升级为风控。
-- **礼貌抓取**：默认每条约 1.2 秒，全程单浏览器会话。请勿把 `--delayMs` 调到很小。
+- **凭据安全**：所有密钥从环境变量读取，仓库内无任何硬编码密钥。`.env` 已忽略，且
+  `_tools/push-api.mjs` 在推送前强制执行 `_tools/scan-secrets.mjs`——检测到任何
+  凭据样式内容会**拒绝推送并退出**（可用 `node _tools/scan-secrets.mjs` 单独运行自检）。
+- **验证码**：知网触发时脚本报 `CAPTCHA_BLOCKED` 并停止，不会硬绕。请在 Chrome 窗口手动拖动滑块，再用 `--reuse` 继续。
+- **403 / 429**：接口返回 403 时立即停止重试，避免升级为风控。
+- **礼貌抓取**：知网每条约 1.2 秒，维普每条约 1.5 秒（含详情页），全程单浏览器会话。请勿把 `--delay-ms` 调到很小。
 - **版权**：本工具只取**题录与摘要**，不下载全文。
   `SepineTam/cnki-mcp` 的许可条款明确禁止批量检索，故本项目为独立实现，仅参考其接口用法；参考项目源码未随仓库分发。
-- **机构权限**：能否取到摘要取决于机构 IP 订阅；无订阅时部分记录会缺摘要。
+- **机构权限**：知网能否取到摘要取决于机构 IP 订阅。
+- **检索可复现**：每次输出都记录检索式、检索时间、命中数与来源，供方法学章节引用。
 
 ---
 
@@ -311,18 +414,29 @@ macOS / Linux 无此问题。
 
 ```
 src/
-  cdp.js             浏览器查找、启动、CDP 连接（跨平台）
-  cnki-batch.js      CNKI 批量检索主程序
-  parse-formats.js   RIS / BibTeX / EndNote / JSON 解析
-  normalize.js       规范化、匹配级联、去重、合并
-  merge.js           跨库合并去重 CLI
-  probe.js           环境与 DOM 选择器探测
-  probe-export.js    CNKI 导出接口验证
-  probe-foreign.js   WoS / Embase / Cochrane 可获取性探测
-  probe-wos.js       Web of Science 访问与 API 需求核实
-testdata/            合成的跨库测试数据（由 _tools/make-fixtures.mjs 生成）
-_tools/              维护者脚本（推送、校验），不随仓库发布
+  retrieve.js          统一检索 CLI（多源 + 自动去重）
+  retrieve/
+    common.js          HTTP 工具、礼貌 UA、退避重试
+    pubmed.js          PubMed（E-utilities 两步调用 + 自研 XML 解析）
+    europepmc.js       Europe PMC REST API
+    clinicaltrials.js  ClinicalTrials.gov v2 API
+    cnki.js            知网（调用 cnki-batch.js 的浏览器流程）
+    vip.js             维普（浏览器 + 详情页补摘要）
+    browser-utils.js   浏览器源共享的 CDP 工具
+  cdp.js              浏览器查找、启动、CDP 连接（跨平台）
+  cnki-batch.js       CNKI 批量检索主程序
+  xml.js              零依赖 XML 解析器（PubMed 需要，见下）
+  parse-formats.js    RIS / BibTeX / EndNote / JSON 解析
+  normalize.js        规范化、匹配级联、去重、合并
+  merge.js            跨库合并去重 CLI
+  probe*.js           各库可获取性与 DOM 选择器探测
+testdata/             合成的跨库测试数据（由 _tools/make-fixtures.mjs 生成）
+_tools/               维护者脚本（推送、密钥扫描、各库调试），不随仓库发布
 ```
+
+> `xml.js` 存在的原因：PubMed XML 里 `<ArticleIdList>` 既出现在文章自身，也出现在
+> `<ReferenceList>` 的每条参考文献中。用正则提取会匹配到参考文献的 DOI
+> （实测 3 篇文章下抓到 98 个 DOI），因此必须按层级解析。
 
 生成测试数据并自检：
 
@@ -333,6 +447,12 @@ node src/merge.js --in testdata/webofscience.ris testdata/cochrane.ris testdata/
 ```
 
 预期结果：21 条输入 → 10 条唯一记录，`match reasons: {"doi":7,"title+year":3,"title-fuzzy":1}`。
+
+检索自检（需要联网）：
+
+```bash
+node src/retrieve.js --query "acupuncture AND lung cancer" --sources pubmed,europepmc,clinicaltrials --limit 25
+```
 
 ---
 

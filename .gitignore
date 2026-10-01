@@ -1,11 +1,23 @@
 # dependencies
 node_modules/
 
+# ---------------------------------------------------------------- SECRETS
+# Never commit credentials. All API keys are read from the environment.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+secrets/
+credentials.json
+
 # Chrome profile created by the launcher (contains an institution session)
 .chrome-profile*/
 
-# retrieval output
+# retrieval output (may contain licensed abstracts - keep local)
 out/
+results/
 
 # local npm cache (used when the default cache is not writable)
 .npm-cache/

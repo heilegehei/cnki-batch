@@ -18,13 +18,17 @@
     "node": ">=18"
   },
   "scripts": {
+    "retrieve": "node src/retrieve.js",
+    "merge": "node src/merge.js",
     "probe": "node src/probe.js",
     "probe:export": "node src/probe-export.js",
     "probe:foreign": "node src/probe-foreign.js",
+    "probe:cn": "node src/probe-cn-databases.js",
+    "probe:free": "node src/probe-free-sources2.js",
     "batch": "node src/cnki-batch.js",
-    "merge": "node src/merge.js",
     "fixtures": "node _tools/make-fixtures.mjs",
-    "check": "node --check src/cdp.js && node --check src/cnki-batch.js && node --check src/merge.js && node --check src/normalize.js && node --check src/parse-formats.js && node --check src/probe.js && node --check src/probe-export.js && node --check src/probe-foreign.js && node --check src/probe-wos.js"
+    "scan": "node _tools/scan-secrets.mjs",
+    "check": "node --check src/retrieve.js && node --check src/retrieve/common.js && node --check src/retrieve/pubmed.js && node --check src/retrieve/europepmc.js && node --check src/retrieve/clinicaltrials.js && node --check src/retrieve/cnki.js && node --check src/retrieve/vip.js && node --check src/retrieve/browser-utils.js && node --check src/xml.js && node --check src/cdp.js && node --check src/cnki-batch.js && node --check src/merge.js && node --check src/normalize.js && node --check src/parse-formats.js"
   },
   "dependencies": {
     "puppeteer-core": "^25.12.0"

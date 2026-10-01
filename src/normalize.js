@@ -330,9 +330,22 @@ const unionList = (a, b) => {
 };
 
 /**
+ * Fields with dedicated merge rules. Any other key present on the input records
+ * is carried through generically (see the extra-field handling below), so
+ * source-specific data such as ClinicalTrials.gov registry numbers or VIP
+ * journal-indexing badges is not silently dropped.
+ */
+const CORE_FIELDS = new Set([
+  "title", "authors", "source", "year", "pubDate", "docType", "keywords",
+  "abstract", "doi", "volume", "issue", "pages", "issn", "url", "pmid",
+  "language", "publisher", "sources", "mergedFrom",
+]);
+
+/**
  * Merge duplicate records into one, preferring the most complete values.
  * Text fields take the longest non-empty variant (usually the richest source);
  * list fields are unioned; identifiers are taken from whichever source has one.
+ * Non-core fields are preserved rather than discarded.
  */
 export function mergeRecords(records) {
   const out = {
@@ -361,6 +374,21 @@ export function mergeRecords(records) {
     out.language = out.language || collapse(r.language);
     out.publisher = out.publisher || collapse(r.publisher);
   }
+
+  // Carry source-specific fields through instead of dropping them. Lists are
+  // unioned, scalars take the first non-empty value.
+  for (const r of records) {
+    if (!r) continue;
+    for (const [key, value] of Object.entries(r)) {
+      if (CORE_FIELDS.has(key)) continue;
+      if (Array.isArray(value)) {
+        out[key] = unionList(out[key], value);
+      } else if (value && value !== "" && (out[key] === undefined || out[key] === "")) {
+        out[key] = value;
+      }
+    }
+  }
+
   out.title = collapse(out.title);
   out.abstract = collapse(out.abstract);
   out.authors = out.authors.map(collapse).filter(Boolean);
