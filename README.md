@@ -153,12 +153,122 @@ npm run probe:export -- "中医药 肺癌"
 
 ---
 
+## 多库访问现状（实测）
+
+不同数据库的可获取性差异极大，实测结论如下（`npm run probe:foreign` 可复现）：
+
+| 数据库 | 状态 | 判读 |
+|---|---|---|
+| **PubMed** | 200 | 官方 E-utilities，免费开放 |
+| **Europe PMC** | 200 | 免费 REST API，含全文与预印本 |
+| **Crossref** | 200 | 免费，DOI 权威源 |
+| **CNKI 知网** | 200（需机构会话） | 服务端渲染，本项目已支持批量 |
+| **Cochrane Library** | **403 `Just a moment...`** | Cloudflare 反爬 |
+| **Embase** | **403 `Just a moment...`** | Cloudflare 反爬 |
+| **Web of Science** | 200 但仅空壳 SPA | 内容须机构会话；API 返回 401 需 key |
+
+### 为什么不为这三个库写爬虫
+
+不是技术上"做不到"，而是三条路同时封死：
+
+1. **技术**：Cloudflare 挑战 + SPA 架构，直连拿不到内容。
+2. **合规**：Clarivate / Elsevier 条款明确禁止未经许可的自动抓取；数据挖掘须走机构协议或官方 API。
+3. **方法学**：指南与共识必须报告**可复现**的检索过程。爬虫结果不稳定、无法引用，审稿时无法交代检索日期与命中数。
+
+**正解是官方 API**（需机构权限）：
+
+- Web of Science：Starter / Expanded API（[申请凭据](https://clarivate.libguides.com/ld.php?content_id=77549221#1#1)）
+- Embase：Elsevier Embase API（[使用资格](https://www.elsevier.support/dataasaservice/answer/who-can-use-the-elsevier-research-products-apis)）
+- Cochrane：机构访问 + 平台导出 RIS
+
+本项目提供的是它们的**理论覆盖替代与结果合并**：Europe PMC + Crossref 可覆盖相当部分 PubMed/Embase 重叠区，而**合并去重层对任何来源都适用**（包括你手动导出的 RIS）。
+
+> 诚实说明：Embase 相对 PubMed 的独特价值（约 15–30% 会议摘要与欧洲期刊）**没有免费替代**。若指南要求必须检索 Embase，需要机构订阅。
+
+---
+
+## 跨库合并与去重
+
+指南检索会横跨多个库，最终必须报成**一张去重后的表**和一个 PRISMA 流程图数字。这个模块负责把任意来源的导出合并去重。
+
+支持四种格式（自动识别）：
+
+| 格式 | 来源 |
+|---|---|
+| **RIS** | Web of Science、Cochrane、Embase、Scopus |
+| **EndNote** | CNKI（本项目的 `--out` 产出）、Web of Science |
+| **BibTeX** | Zotero、EndNote、Google Scholar |
+| **JSON** | 本项目 CNKI 模块的输出 |
+
+### 用法
+
+```bash
+node src/merge.js --in wos.ris cochrane.ris pubmed.txt cnki.json embase.ris --out merged
+
+# 覆盖来源标签（文件名无法识别时）
+node src/merge.js --in a.ris b.ris --source "Web of Science" --source Cochrane --out merged
+
+# 调参
+node src/merge.js --in a.ris b.ris --no-fuzzy            # 只做精确匹配
+node src/merge.js --in a.ris b.ris --threshold 0.92      # 更严格的模糊阈值
+node src/merge.js --in a.ris --dry                       # 只解析，不写文件
+```
+
+| 参数 | 说明 | 默认 |
+|---|---|---|
+| `--in` | 输入文件（可多个） | 必填 |
+| `--source` | 覆盖来源标签，按位置对应 `--in` | 按文件名猜测 |
+| `--out` | 输出目录 | `merged` |
+| `--threshold` | 模糊匹配相似度阈值 | 0.9 |
+| `--no-fuzzy` | 关闭模糊匹配 | 关闭前为开启 |
+| `--no-year-check` | 题名相同但年份不同也合并 | 不合并 |
+
+### 匹配级联
+
+按顺序执行，任一级命中即合并（并记录原因，可审计）：
+
+| 顺序 | 规则 | 说明 |
+|---|---|---|
+| 1 | **DOI** | 最强标识；大小写与 `doi:` 前缀自动归一 |
+| 2 | **PMID** | PubMed / Europe PMC 重叠 |
+| 3 | **题名 + 年** | 归一化后完全相等 |
+| 4 | **题名模糊** | 同英文分词 / 中文二元组的 token-set Jaccard ≥ 阈值 |
+
+合并用并查集**传递合并**：A~B 靠 DOI、B~C 靠题名，三者归为一条。年份参与约束，避免同名不同年误合并。
+
+### 输出
+
+- `merged_<时间>.json` — 合并后记录 + 报告 + 输入清单
+- `merged_<时间>.csv` — 带 BOM，可直接用于 Excel / Rayyan / Covidence 筛选
+- `dedup-report_<时间>.json` — 去重报告，含每次合并的**保留/丢弃题名与来源**
+
+### 实测（`npm run fixtures` 生成合成数据后）
+
+```
+input records        : 21
+unique records       : 10
+duplicates removed   : 11
+cross-database merges: 5
+match reasons        : {"doi":7,"title+year":3,"title-fuzzy":1}
+```
+
+其中一条把 **PubMed + Embase + CNKI + Zotero 四源**正确合并为一条，作者与关键词求并集、摘要取最长变体。合成数据已覆盖真实差异：DOI 大小写、全角括号、破折号、`randomized`/`randomised`、方括号包裹的英译题名、以及**无 DOI**的仅题名重叠。
+
+字段合并策略：文本取最长非空值（通常信息最全），作者/关键词求并集，标识符取任一来源有值者。
+
+---
+
 ## 与既有文献流水线对接
 
-`cnki_<时间>.json` 的 `records[]` 可与 PubMed 等模块的原始记录合并后统一去重：
+CNKI 模块产出的 `cnki_<时间>.json` 直接喂给合并层即可：
 
-- 去重建议：**DOI 优先**，其次 `题名 + 年`
-- 注意：CNKI 题名可能含 `<sup>` 等 HTML 标记，比对前需规范化
+```bash
+node src/merge.js --in out/cnki_2026-10-01_11-56-22.json pubmed.txt cochrane.ris --out merged
+```
+
+- 去重由合并层统一处理（DOI → PMID → 题名+年 → 模糊）
+- CNKI 题名可能含 `<sup>` 等 HTML 标记，解析时已自动剥离
+- 需要人工核对时看 `dedup-report_*.json` 里每次合并的保留/丢弃题名
 
 ---
 
@@ -201,11 +311,28 @@ macOS / Linux 无此问题。
 
 ```
 src/
-  cdp.js            浏览器查找、启动、CDP 连接（跨平台）
-  cnki-batch.js     批量检索主程序
-  probe.js          环境与 DOM 选择器探测
-  probe-export.js   导出接口验证
+  cdp.js             浏览器查找、启动、CDP 连接（跨平台）
+  cnki-batch.js      CNKI 批量检索主程序
+  parse-formats.js   RIS / BibTeX / EndNote / JSON 解析
+  normalize.js       规范化、匹配级联、去重、合并
+  merge.js           跨库合并去重 CLI
+  probe.js           环境与 DOM 选择器探测
+  probe-export.js    CNKI 导出接口验证
+  probe-foreign.js   WoS / Embase / Cochrane 可获取性探测
+  probe-wos.js       Web of Science 访问与 API 需求核实
+testdata/            合成的跨库测试数据（由 _tools/make-fixtures.mjs 生成）
+_tools/              维护者脚本（推送、校验），不随仓库发布
 ```
+
+生成测试数据并自检：
+
+```bash
+npm run fixtures
+node src/merge.js --in testdata/webofscience.ris testdata/cochrane.ris testdata/pubmed.txt \
+  testdata/embase.ris testdata/cnki.json testdata/nodoi_a.ris testdata/nodoi_b.ris --out out
+```
+
+预期结果：21 条输入 → 10 条唯一记录，`match reasons: {"doi":7,"title+year":3,"title-fuzzy":1}`。
 
 ---
 

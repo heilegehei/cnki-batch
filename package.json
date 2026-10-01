@@ -20,8 +20,11 @@
   "scripts": {
     "probe": "node src/probe.js",
     "probe:export": "node src/probe-export.js",
+    "probe:foreign": "node src/probe-foreign.js",
     "batch": "node src/cnki-batch.js",
-    "check": "node --check src/cdp.js && node --check src/cnki-batch.js && node --check src/probe.js && node --check src/probe-export.js"
+    "merge": "node src/merge.js",
+    "fixtures": "node _tools/make-fixtures.mjs",
+    "check": "node --check src/cdp.js && node --check src/cnki-batch.js && node --check src/merge.js && node --check src/normalize.js && node --check src/parse-formats.js && node --check src/probe.js && node --check src/probe-export.js && node --check src/probe-foreign.js && node --check src/probe-wos.js"
   },
   "dependencies": {
     "puppeteer-core": "^25.12.0"

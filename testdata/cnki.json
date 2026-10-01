@@ -1,0 +1,89 @@
+{
+  "source": "CNKI (中国知网)",
+  "database": "CNKI",
+  "query": "中医药 肺癌 围手术期",
+  "searchMode": "one-box",
+  "totalHitsReported": 4,
+  "retrievedAt": "2026-10-01T11:56:00.000Z",
+  "records": [
+    {
+      "title": "补肺消积饮联合化疗治疗围手术期气阴两虚型原发性支气管肺癌疗效观察",
+      "authors": [
+        "王海燕",
+        "李国锋"
+      ],
+      "source": "中华中医药学刊",
+      "docType": "期刊",
+      "year": "2023",
+      "pubDate": "2023-04-10",
+      "keywords": "补肺消积饮; 围手术期; 非小细胞肺癌; 气阴两虚",
+      "abstract": "目的：观察补肺消积饮联合化疗治疗围手术期气阴两虚型原发性支气管肺癌的临床疗效。方法：将60例患者随机分为治疗组与对照组。结果：治疗组在免疫功能及生活质量方面优于对照组。结论：补肺消积饮可改善围手术期肺癌患者免疫功能。",
+      "doi": "10.13193/j.issn.1673-7717.2023.04.021",
+      "institution": "辽宁中医药大学",
+      "issue": "4",
+      "pages": "88-92",
+      "srcDatabase": "期刊",
+      "link": "https://link.cnki.net/doi/10.13193/j.issn.1673-7717.2023.04.021",
+      "detailUrl": "https://kns.cnki.net/kcms2/article/abstract?v=example1"
+    },
+    {
+      "title": "逍遥散加减治疗NSCLC（125I粒子植入术）围手术期焦虑状态（肝郁脾虚型）的疗效观察",
+      "authors": [
+        "张丽",
+        "刘洋"
+      ],
+      "source": "中国中西医结合杂志",
+      "docType": "期刊",
+      "year": "2022",
+      "pubDate": "2022-06-01",
+      "keywords": "逍遥散; 非小细胞肺癌; 围手术期; 焦虑",
+      "abstract": "目的：观察逍遥散加减对NSCLC患者125I粒子植入术围手术期焦虑状态的影响。方法：将84例肝郁脾虚型患者随机分组。结果：治疗组HAMA评分下降更明显。结论：逍遥散加减可改善围手术期焦虑。",
+      "doi": "",
+      "institution": "北京中医药大学",
+      "issue": "6",
+      "pages": "712-716",
+      "srcDatabase": "期刊",
+      "link": "",
+      "detailUrl": "https://kns.cnki.net/kcms2/article/abstract?v=example2"
+    },
+    {
+      "title": "Xiaoai Jiedu Recipe combined with chemotherapy for advanced non-small cell lung cancer: a randomized clinical trial",
+      "authors": [
+        "Yang, Xiaohong",
+        "Deng, Wei"
+      ],
+      "source": "Chinese Journal of Integrative Medicine",
+      "docType": "期刊",
+      "year": "2024",
+      "pubDate": "2024-02-01",
+      "keywords": "Xiaoai Jiedu Recipe; non-small cell lung cancer",
+      "abstract": "OBJECTIVE: To evaluate Xiaoai Jiedu Recipe combined with chemotherapy in advanced NSCLC. METHODS: 80 patients were randomized. RESULTS: The treatment group showed improved objective response rate and quality of life.",
+      "doi": "10.1007/s11655-023-9876-5",
+      "institution": "Zhejiang Chinese Medical University",
+      "issue": "2",
+      "pages": "145-153",
+      "srcDatabase": "期刊",
+      "link": "https://link.cnki.net/doi/10.1007/s11655-023-9876-5",
+      "detailUrl": "https://kns.cnki.net/kcms2/article/abstract?v=example3"
+    },
+    {
+      "title": "中医药在肺癌围手术期应用的研究进展",
+      "authors": [
+        "陈静"
+      ],
+      "source": "中国中西医结合杂志",
+      "docType": "期刊",
+      "year": "2007",
+      "pubDate": "2007-03-01",
+      "keywords": "中医药; 围手术期; 肺癌; 进展",
+      "abstract": "",
+      "doi": "",
+      "institution": "上海中医药大学",
+      "issue": "3",
+      "pages": "261-264",
+      "srcDatabase": "期刊",
+      "link": "",
+      "detailUrl": "https://kns.cnki.net/kcms2/article/abstract?v=example4"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+%0 Journal Article
+%A Zhang W
+%A Li M
+%A Chen H
+%T Acupuncture for chemotherapy-induced nausea and vomiting in lung cancer: a randomized controlled trial.
+%J Support Care Cancer
+%D 2023
+%V 31
+%N 5
+%P 1201-1210
+%R 10.1007/s00520-023-01234-5
+%M 37123456
+%X BACKGROUND: Chemotherapy-induced nausea and vomiting (CINV) remains a major burden. This randomized trial evaluated acupuncture as an adjunct in lung cancer patients. METHODS: 120 patients were randomized. RESULTS: The acupuncture group showed significantly lower CINV incidence. CONCLUSION: Acupuncture reduced CINV severity.
+%K acupuncture
+%K CINV
+%K lung neoplasms
+
+%0 Journal Article
+%A Yang, Xiaohong
+%A Deng, Wei
+%T Xiaoai Jiedu Recipe combined with chemotherapy for advanced non-small cell lung cancer: a randomized clinical trial
+%J Chinese Journal of Integrative Medicine
+%D 2024
+%V 30
+%N 2
+%P 145-153
+%R 10.1007/s11655-023-9876-5
+%M 38234567
+%X OBJECTIVE: To evaluate Xiaoai Jiedu Recipe combined with chemotherapy in advanced NSCLC. METHODS: 80 patients were randomized. RESULTS: The treatment group showed improved objective response rate and quality of life.
+%K Xiaoai Jiedu Recipe
+%K non-small cell lung cancer
+%K randomized controlled trial
+
+%0 Journal Article
+%A Kim, Soo
+%A Park, Jae
+%T Acupuncture for chemotherapy induced nausea and vomiting in lung cancer patients: a randomized controlled trial
+%J Journal of Clinical Oncology
+%D 2023
+%V 41
+%N 16
+%P 2988-2997
+%R 10.1200/JCO.22.01234
+%M 37123999
+%X PURPOSE: To evaluate acupuncture for chemotherapy induced nausea and vomiting (CINV) in lung cancer. METHODS: 200 patients. RESULTS: Acupuncture significantly reduced CINV.
+%K acupuncture
+%K CINV
