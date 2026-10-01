@@ -16,8 +16,14 @@ credentials.json
 .chrome-profile*/
 
 # retrieval output (may contain licensed abstracts - keep local)
+# Patterns cover the --out names used in the docs, including suffixed variants
+# such as results-all or out-check, which a bare "out/" would miss.
 out/
+out-*/
+out_*/
 results/
+results-*/
+results_*/
 
 # local npm cache (used when the default cache is not writable)
 .npm-cache/
