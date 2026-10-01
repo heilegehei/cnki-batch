@@ -1,0 +1,14 @@
+{
+  "inputRecords": 8,
+  "uniqueRecords": 8,
+  "duplicatesRemoved": 0,
+  "duplicateClusters": 0,
+  "fuzzyComparisons": 8,
+  "matchReasons": {},
+  "perSource": {
+    "Europe PMC": 4,
+    "维普 VIP": 4
+  },
+  "crossSourceClusters": 0,
+  "mergeDetails": []
+}
