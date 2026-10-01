@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+
+# Chrome profile created by the launcher (contains an institution session)
+.chrome-profile*/
+
+# retrieval output
+out/
+
+# local npm cache (used when the default cache is not writable)
+.npm-cache/
+
+# probe leftovers / OS noise
+.chrome-stderr.txt
+.chrome-stdout.txt
+.DS_Store
+Thumbs.db
+
+# reference repositories cloned for study (re-clone with the README commands)
+repos/
